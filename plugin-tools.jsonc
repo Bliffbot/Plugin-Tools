@@ -1,0 +1,64 @@
+// YOU MIGHT HAVE TO REMOVE ALL COMMENTS FROM THIS FILE
+{
+	// just the name of your plugin without anything else like version numbers
+	"pluginName": "best plugin",
+
+	// the folder in which intellij put the compiled jar files
+	"sourceFolder": "C:/intellij/projects/best plugin/target",
+
+	// the path to the pom.xml which has all of your maven config
+	"pomXML": "C:/intellij/projects/best plugin/pom.xml",
+
+	// true		- the script automatically sets the next version in the pom.xml
+	// false	- the pom.xml remains untouched
+	// supported version formats: 1.0.0 or 1.0.0.beta.0
+	// the last number will be incremented by one: 1.0.1 or 1.0.0.beta.1
+	// everything else is ignored so you could put \'the.BEST.plugin.EVER.0\' and it would still work
+	"setNextVersion": "true",
+
+	// put all the folders where you want the latest version of your plugin to be copied to in here
+	"folders": {
+
+		"folder name": {
+
+			// put the path of your folder in here
+			"path": "C:/minecraft server/plugins",
+
+			// the folder might not be on the local machine and instead on an sftp server
+			// set the following options if you this is the case
+			"sftp": {
+				"enabled": "false",
+				"ip": "127.0.0.1",
+				"port": "22",
+				"username": "user",
+				"password": "password"
+			},
+
+			// old		- the script looks for all .jar-files starting with the the name of your plugin and append them with .old
+			// delete	- the script looks for all .jar-files starting with the the name of your plugin and delete them
+			// false	- the script will not search the folder for these .jar-files
+			"tidy": "delete",
+
+			// true		- the script will copy the latest version of your plugin to this folder (after tidy ran)
+			// false	- the script will not copy the latest version of your plugin to this folder
+			"copy": "true"
+		}
+	},
+
+	// you can execute a command on a server using rcon if you want
+	"servers": {
+
+		// the name is only used for logging purposes
+		"server name": {
+
+			// set the rcon options to allow the script to connect to the server
+			"enabled": "false",
+			"ip": "127.0.0.1",
+			"port": "25575",
+			"password": "password",
+
+			// it is possible to execute multiple commands
+			"command": ["reload confirm", "say SERVER IS READY"]
+		}
+	}
+}
