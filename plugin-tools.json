@@ -1,0 +1,12 @@
+{
+    "pluginName": "pluginName",
+    "projectPath": "/path/to/your/poject",
+    "setNextVersion": "true",
+    "tidyFolders": ["/folders/that", "/should/be", "/cleaned/from", "/the/jar-file"],
+    "copyFolders": ["/folders/were", "/the/latest", "/build/gets", "/copied/to"],
+    "sendServerCommand": "true",
+    "rconIP": "localhost",
+    "rconPort": "25575",
+    "rconPassword": "password1",
+    "rconCommand": ["reload confirm"]
+}
