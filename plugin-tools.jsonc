@@ -4,7 +4,7 @@
 	"pluginName": "best plugin",
 
 	// the folder in which intellij put the compiled jar files
-	"sourceFolder": "C:/intellij/projects/best plugin/target",
+	"jarFolder": "C:/intellij/projects/best plugin/target",
 
 	// the path to the pom.xml which has all of your maven config
 	"pomXML": "C:/intellij/projects/best plugin/pom.xml",
@@ -13,7 +13,7 @@
 	// false	- the pom.xml remains untouched
 	// supported version formats: 1.0.0 or 1.0.0.beta.0
 	// the last number will be incremented by one: 1.0.1 or 1.0.0.beta.1
-	// everything else is ignored so you could put \'the.BEST.plugin.EVER.0\' and it would still work
+	// everything else is ignored so you could put 'the.BEST.plugin.EVER.0' and it would still work
 	"setNextVersion": "true",
 
 	// put all the folders where you want the latest version of your plugin to be copied to in here
@@ -25,7 +25,7 @@
 			"path": "C:/minecraft server/plugins",
 
 			// the folder might not be on the local machine and instead on an sftp server
-			// set the following options if you this is the case
+			// set the following options if this is the case
 			"sftp": {
 				"enabled": "false",
 				"ip": "127.0.0.1",

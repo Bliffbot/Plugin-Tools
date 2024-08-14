@@ -1,5 +1,4 @@
 import os
-import time
 import shutil
 import datetime
 import sys
@@ -9,25 +8,27 @@ import paramiko
 import stat
 from mcrcon import MCRcon
 
+def log(text):
+	print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] {text}")
 
 def logo():
-	print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] Plugin-Tools by Bliffbot")
-	print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] Version 2.0.0")
-	print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] ")
-	print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] loading config...")
+	log(f"Plugin-Tools by Bliffbot")
+	log(f"Version 2.1.0")
+	log(f"")
+	log(f"loading config...")
 
 
 def help():
-	print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] no args detected")
-	print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] USAGE")
-	print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] plugin-tools.py \"path/to/config.json\"")
-	print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] the config file will be set to a default if it is empty")
-	print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] the following pip packages are required: json5, mcrcon, paramiko")
+	log(f"no args detected")
+	log(f"USAGE")
+	log(f"plugin-tools.py \"path/to/config.json\"")
+	log(f"the config file will be set to a default if it is empty")
+	log(f"the following pip packages are required: json5, mcrcon, paramiko")
 	exit()
 
 
 def newConfig():
-	print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] config file not found or empty")
+	log(f"config file not found or empty")
 
 	defaults = '''// YOU MIGHT HAVE TO REMOVE ALL COMMENTS FROM THIS FILE
 {
@@ -35,7 +36,7 @@ def newConfig():
 	"pluginName": "best plugin",
 
 	// the folder in which intellij put the compiled jar files
-	"sourceFolder": "C:/intellij/projects/best plugin/target",
+	"jarFolder": "C:/intellij/projects/best plugin/target",
 
 	// the path to the pom.xml which has all of your maven config
 	"pomXML": "C:/intellij/projects/best plugin/pom.xml",
@@ -44,17 +45,19 @@ def newConfig():
 	// false	- the pom.xml remains untouched
 	// supported version formats: 1.0.0 or 1.0.0.beta.0
 	// the last number will be incremented by one: 1.0.1 or 1.0.0.beta.1
-	// everything else is ignored so you could put \'the.BEST.plugin.EVER.0\' and it would still work
+	// everything else is ignored so you could put 'the.BEST.plugin.EVER.0' and it would still work
 	"setNextVersion": "true",
 
 	// put all the folders where you want the latest version of your plugin to be copied to in here
 	"folders": {
 
-		// put the path of your folder in here
-		"C:/minecraft server/plugins": {
+		"folder name": {
+
+			// put the path of your folder in here
+			"path": "C:/minecraft server/plugins",
 
 			// the folder might not be on the local machine and instead on an sftp server
-			// set the following options if you this is the case
+			// set the following options if this is the case
 			"sftp": {
 				"enabled": "false",
 				"ip": "127.0.0.1",
@@ -64,7 +67,7 @@ def newConfig():
 			},
 
 			// old		- the script looks for all .jar-files starting with the the name of your plugin and append them with .old
-			// delete	- the script looks for all .jar-files starting with the the name of your plugin and delete them (even the old ones)
+			// delete	- the script looks for all .jar-files starting with the the name of your plugin and delete them
 			// false	- the script will not search the folder for these .jar-files
 			"tidy": "delete",
 
@@ -95,11 +98,11 @@ def newConfig():
 	try:
 		with open(sys.argv[1], "w") as configFile:
 			configFile.write(defaults)
-		print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] new config file generated at {sys.argv[1]}")
+		log(f"new config file generated at {sys.argv[1]}")
 	except Exception as error:
-		print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] could not generate new config file - {error}")
+		log(f"could not generate new config file - {error}")
 
-	print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] finished :)")
+	log(f"finished :)")
 	exit()
 
 
@@ -116,41 +119,41 @@ def getConfig():
 	with open(sys.argv[1], "r") as configFile:
 		config = json5.load(configFile)
 
-	print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] config loaded")
-	print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] Plugin Name: {config['pluginName']}")
-	print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] Source Folder: {config['sourceFolder']}")
-	print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] POM Location: {config['pomXML']}")
+	log(f"config loaded")
+	log(f"Plugin Name: {config["pluginName"]}")
+	log(f"Source Folder: {config["jarFolder"]}")
+	log(f"POM Location: {config["pomXML"]}")
 	return config
 
 
 def pom(config):
-	print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] getting plugin version...")
+	log(f"getting plugin version...")
 
-	if not os.path.exists(config['pomXML']):
-		print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] pom.xml not found - please check your config")
+	if not os.path.exists(config["pomXML"]):
+		log(f"pom.xml not found - please check your config")
 		exit()
 
-	tree = ET.parse(f"{config['pomXML']}")
+	tree = ET.parse(f"{config["pomXML"]}")
 
 	if tree is None:
-		print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] pom.xml could not be parsed")
+		log(f"pom.xml could not be parsed")
 		exit()
 
 	root = tree.getroot()
-	namespace = root.tag[root.tag.find('{')+1:root.tag.find('}')]
-	version_element = root.find(f'{{{namespace}}}version')
+	namespace = root.tag[root.tag.find("{")+1:root.tag.find("}")]
+	version_element = root.find(f"{{{namespace}}}version")
 
 	if version_element is None:
-		print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] plugin version could not be found in the pom.xml")
+		log(f"plugin version could not be found in the pom.xml")
 		exit()
 
 	pluginVersion = version_element.text
 
 	if pluginVersion is None:
-		print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] plugin version seem to be not set in the pom.xml")
+		log(f"plugin version seem to be not set in the pom.xml")
 		exit()
 
-	print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] Plugin Version: {pluginVersion}")
+	log(f"Plugin Version: {pluginVersion}")
 
 	if config["setNextVersion"] == "false":
 		return pluginVersion
@@ -160,191 +163,193 @@ def pom(config):
 	try:
 		versionInt = int(version[-1])
 	except:
-		print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] weird version in pom.xml -> did not modify")
-		print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] please use major.minor.patch.test.revision")
-		print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] the parts need to be separated by dots")
-		print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] and there must be a number after the last dot")
-		print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] e.g. 1.2.3 or 1.2.3.beta.4")
+		log(f"weird version in pom.xml -> did not modify")
+		log(f"please use major.minor.patch.test.revision")
+		log(f"the parts need to be separated by dots")
+		log(f"and there must be a number after the last dot")
+		log(f"e.g. 1.2.3 or 1.2.3.beta.4")
 		return pluginVersion
 
 	version[-1] = str(versionInt + 1)
 	newVersion = ".".join(version)
 
-	print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] Next Version: {newVersion}")
+	log(f"Next Version: {newVersion}")
 	version_element.text = newVersion
 
 	try:
 		tree.write("pom.xml", xml_declaration = True, encoding = "utf-8", method = "xml", default_namespace = namespace)
-		print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] the next plugin version has been set in the pom.xml")
+		log(f"the next plugin version has been set in the pom.xml")
 
 	except:
-		print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] could not update the plugin version in the pom.xml")
+		log(f"could not update the plugin version in the pom.xml")
 
 	return pluginVersion
 
 
-def sftpTidy(config, folder, sftp):
-	if config["folders"][folder]["tidy"] != "old" and config["folders"][folder]["tidy"] != "delete":
-		print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] not tidying sftp folder")
-		return
+def sftp(config, folder, zip):
+	log(f"sftp connecting...")
 
-	print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] tidying sftp folder...")
-
-	folderPath = config["folders"][folder]["path"]
-
-	if not folderPath.endswith("/"):
-		folderPath = folderPath + "/"
-
-	for file in sftp.listdir(folderPath):
-		path = folderPath + file
-		if file.startswith(config['pluginName']) and stat.S_ISREG(sftp.stat(path).st_mode) and file.endswith(".jar"):
-			if config["folders"][folder]["tidy"] == "old":
-				try:
-					sftp.rename(path, path + ".old")
-					print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] {file} renamed")
-				except Exception as error:
-					print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] {file} not renamed - {error}")
-
-			if config["folders"][folder]["tidy"] == "delete":
-				try:
-					sftp.remove(path)
-					print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] {file} deleted")
-				except Exception as error:
-					print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] {file} not deleted - {error}")
-
-	print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] tidied sftp folder")
-
-
-def sftpCopy(config, folder, jarPath, fileName, sftp):
-	if config["folders"][folder]["copy"] == "false":
-		print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] not copying to sftp folder")
-		return
-
-	print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] copying to sftp folder...")
-
-	folderPath = config["folders"][folder]["path"]
-
-	if not folderPath.endswith("/"):
-		folderPath = folderPath + "/"
-
-	try:
-		sftp.put(jarPath, folderPath + fileName)
-		print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] copied to sftp folder")
-
-	except Exception as error:
-		print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] {error}")
-
-
-def sftp(config, folder, jarPath, fileName):
-	print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] sftp connecting...")
 	ssh = paramiko.SSHClient()
 	ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-	ssh.connect(config["folders"][folder]["sftp"]["ip"], int(config["folders"][folder]["sftp"]["port"]), config["folders"][folder]["sftp"]["username"], config["folders"][folder]["sftp"]["password"])
+	
+	if zip:
+		ssh.connect(config["folders"][folder]["zip"]["sftp"]["ip"], int(config["folders"][folder]["zip"]["sftp"]["port"]), config["folders"][folder]["zip"]["sftp"]["username"], config["folders"][folder]["zip"]["sftp"]["password"])
+	
+	else:
+		ssh.connect(config["folders"][folder]["sftp"]["ip"], int(config["folders"][folder]["sftp"]["port"]), config["folders"][folder]["sftp"]["username"], config["folders"][folder]["sftp"]["password"])
+	
 	sftp = ssh.open_sftp()
-	print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] sftp connected")
-	sftpTidy(config, folder, sftp)
-	sftpCopy(config, folder, jarPath, fileName, sftp)
-	sftp.close()
+	log(f"sftp connected")
+	return sftp
 
 
 def tidy(config, folder):
-	if config["folders"][folder]["tidy"] != "old" and config["folders"][folder]["tidy"] != "delete":
-		print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] not tidying local folder")
-		return
-
-	print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] tidying local folder...")
-
 	folderPath = config["folders"][folder]["path"]
 
 	if not folderPath.endswith("/"):
 		folderPath = folderPath + "/"
 
-	for file in os.listdir(folderPath):
-		path = folderPath + file
-		if file.startswith(config['pluginName']) and os.path.isfile(path) and file.endswith(".jar"):
-			if config["folders"][folder]["tidy"] == "old":
-				try:
-					shutil.move(path, path + ".old")
-					print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] {file} renamed")
-				except Exception as error:
-					print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] {file} not renamed - {error}")
+	if config["folders"][folder]["sftp"]["enabled"] == "false":
+		if config["folders"][folder]["tidy"] != "old" and config["folders"][folder]["tidy"] != "delete":
+			log(f"not tidying local folder")
+			return
 
-			if config["folders"][folder]["tidy"] == "delete":
-				try:
-					os.remove(path)
-					print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] {file} deleted")
-				except Exception as error:
-					print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] {file} not deleted - {error}")
+		log(f"tidying local folder...")
 
-	print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] tidied local folder")
+		for file in os.listdir(folderPath):
+			path = folderPath + file
+			if file.startswith(config['pluginName']) and os.path.isfile(path) and file.endswith(".jar"):
+				if config["folders"][folder]["tidy"] == "old":
+					try:
+						shutil.move(path, path + ".old")
+						log(f"{file} renamed")
+					except Exception as error:
+						log(f"{file} not renamed - {error}")
+
+				if config["folders"][folder]["tidy"] == "delete":
+					try:
+						os.remove(path)
+						log(f"{file} deleted")
+					except Exception as error:
+						log(f"{file} not deleted - {error}")
+
+		log(f"tidied local folder")
+	
+	else:
+		sftp_connection = sftp(config, folder, False)
+
+		if config["folders"][folder]["tidy"] != "old" and config["folders"][folder]["tidy"] != "delete":
+			log(f"not tidying sftp folder")
+			return
+
+		log(f"tidying sftp folder...")
+
+		for file in sftp_connection.listdir(folderPath):
+			path = folderPath + file
+			if file.startswith(config["pluginName"]) and stat.S_ISREG(sftp_connection.stat(path).st_mode) and file.endswith(".jar"):
+				if config["folders"][folder]["tidy"] == "old":
+					try:
+						sftp_connection.rename(path, path + ".old")
+						log(f" {file} renamed")
+					except Exception as error:
+						log(f"{file} not renamed - {error}")
+
+				if config["folders"][folder]["tidy"] == "delete":
+					try:
+						sftp_connection.remove(path)
+						log(f"{file} deleted")
+					except Exception as error:
+						log(f"{file} not deleted - {error}")
+
+		log(f"tidied sftp folder")
+		sftp_connection.close()
 
 
-def copy(config, folder, jarPath):
-	if config["folders"][folder]["copy"] == "false":
-		print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] not copying to local folder")
-		return
+def copy(config, folder, jarFolder, fileName):
+	if config["folders"][folder]["sftp"]["enabled"] == "false":
+		if config["folders"][folder]["copy"] == "false":
+			log(f"not copying to local folder")
+			return
 
-	print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] copying to local folder...")
+		log(f"copying to local folder...")
 
-	folderPath = config["folders"][folder]["path"]
+		folderPath = config["folders"][folder]["path"]
 
-	if not folderPath.endswith("/"):
-		folderPath = folderPath + "/"
+		if not folderPath.endswith("/"):
+			folderPath = folderPath + "/"
 
-	try:
-		shutil.copy(jarPath, folderPath)
-		print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] copied to local folder")
+		try:
+			shutil.copy(jarFolder + fileName, folderPath)
+			log(f"copied to local folder")
 
-	except Exception as error:
-		print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] {error}")
+		except Exception as error:
+			log(error)
+	
+	else:
+		sftp_connection = sftp(config, folder, False)
+
+		if config["folders"][folder]["copy"] == "false":
+			log(f"not copying to sftp folder")
+			return
+
+		log(f"copying to sftp folder...")
+
+		folderPath = config["folders"][folder]["path"]
+
+		if not folderPath.endswith("/"):
+			folderPath = folderPath + "/"
+
+		try:
+			sftp_connection.put(jarFolder + fileName, folderPath + fileName)
+			log(f"copied to sftp folder")
+
+		except Exception as error:
+			log(error)
+
+		sftp_connection.close()
 
 
 def folders(config, pluginVersion):
 	fileName = f"{config['pluginName']}-{pluginVersion}.jar"
-	print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] File Name: {fileName}")
+	log(f"File Name: {fileName}")
 
-	sourceFolder = config['sourceFolder']
+	jarFolder = config['jarFolder']
 
-	if not sourceFolder.endswith("/"):
-		sourceFolder = sourceFolder + "/"
+	if not jarFolder.endswith("/"):
+		jarFolder = jarFolder + "/"
 
-	jarPath = f"{sourceFolder}{fileName}"
+	jarPath = f"{jarFolder}{fileName}"
 
 	if not os.path.exists(jarPath):
-		print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] jar not found")
+		log(f"jar not found")
 		return
 
-	print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] jar found")
-	time.sleep(2)
-	print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] modifying the folders...")
+	log(f"jar found")
+	log(f"modifying the folders...")
 
 	for folder in config["folders"]:
-		print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] {folder} - {config["folders"][folder]["path"]}")
-		if config["folders"][folder]["sftp"]["enabled"] == "true":
-			sftp(config, folder, jarPath, fileName)
-
-		else:
-			tidy(config, folder)
-			copy(config, folder, jarPath)
+		log(f"{folder} - {config["folders"][folder]["path"]}")
+		tidy(config, folder)
+		copy(config, folder, jarFolder, fileName)
 
 
 def command(options, server):
-	print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] {server}")
+	log(server)
 
 	for command in options["command"]:
 		with MCRcon(options["ip"], options["password"], port = int(options["port"])) as mcr:
 			response = mcr.command(command)
-			print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] {command}")
-			print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] {response}")
+			log(command)
+			log(response)
 
 
 def servers(config):
-	print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] sending server commands...")
+	log(f"sending server commands...")
 
 	for server in config["servers"]:
 		command(config["servers"][server], server)
 
-	print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] all commands sent")
+	log(f"all commands sent")
 
 
 def main():
@@ -362,7 +367,7 @@ def main():
 	folders(config, pluginVersion)
 	servers(config)
 
-	print(f"[{datetime.datetime.now().strftime('%Y.%m.%d - %H:%M:%S')}] finished :)")
+	log(f"finished :)")
 
 
 main()
