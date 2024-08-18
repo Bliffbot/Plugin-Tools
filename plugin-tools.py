@@ -13,7 +13,7 @@ def log(text):
 
 def logo():
 	log(f"Plugin-Tools by Bliffbot")
-	log(f"Version 2.1.0")
+	log(f"Version 2.1.1")
 	log(f"")
 	log(f"loading config...")
 
@@ -186,21 +186,22 @@ def pom(config):
 	return pluginVersion
 
 
-def sftp(config, folder, zip):
+def sftp(config, folder):
 	log(f"sftp connecting...")
 
-	ssh = paramiko.SSHClient()
-	ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-	
-	if zip:
-		ssh.connect(config["folders"][folder]["zip"]["sftp"]["ip"], int(config["folders"][folder]["zip"]["sftp"]["port"]), config["folders"][folder]["zip"]["sftp"]["username"], config["folders"][folder]["zip"]["sftp"]["password"])
-	
-	else:
+	try:
+		ssh = paramiko.SSHClient()
+		ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 		ssh.connect(config["folders"][folder]["sftp"]["ip"], int(config["folders"][folder]["sftp"]["port"]), config["folders"][folder]["sftp"]["username"], config["folders"][folder]["sftp"]["password"])
 	
-	sftp = ssh.open_sftp()
-	log(f"sftp connected")
-	return sftp
+		sftp = ssh.open_sftp()
+		log(f"sftp connected")
+		return sftp
+
+	except Exception as error:
+		log(f"sftp not connected, see error...")
+		log(error)
+		return False
 
 
 def tidy(config, folder):
@@ -236,33 +237,37 @@ def tidy(config, folder):
 		log(f"tidied local folder")
 	
 	else:
-		sftp_connection = sftp(config, folder, False)
-
 		if config["folders"][folder]["tidy"] != "old" and config["folders"][folder]["tidy"] != "delete":
 			log(f"not tidying sftp folder")
 			return
 
 		log(f"tidying sftp folder...")
+		sftp_connection = sftp(config, folder)
 
-		for file in sftp_connection.listdir(folderPath):
-			path = folderPath + file
-			if file.startswith(config["pluginName"]) and stat.S_ISREG(sftp_connection.stat(path).st_mode) and file.endswith(".jar"):
-				if config["folders"][folder]["tidy"] == "old":
-					try:
-						sftp_connection.rename(path, path + ".old")
-						log(f" {file} renamed")
-					except Exception as error:
-						log(f"{file} not renamed - {error}")
+		if sftp_connection != False:
 
-				if config["folders"][folder]["tidy"] == "delete":
-					try:
-						sftp_connection.remove(path)
-						log(f"{file} deleted")
-					except Exception as error:
-						log(f"{file} not deleted - {error}")
+			for file in sftp_connection.listdir(folderPath):
+				path = folderPath + file
+				if file.startswith(config["pluginName"]) and stat.S_ISREG(sftp_connection.stat(path).st_mode) and file.endswith(".jar"):
+					if config["folders"][folder]["tidy"] == "old":
+						try:
+							sftp_connection.rename(path, path + ".old")
+							log(f" {file} renamed")
+						except Exception as error:
+							log(f"{file} not renamed - {error}")
 
-		log(f"tidied sftp folder")
-		sftp_connection.close()
+					if config["folders"][folder]["tidy"] == "delete":
+						try:
+							sftp_connection.remove(path)
+							log(f"{file} deleted")
+						except Exception as error:
+							log(f"{file} not deleted - {error}")
+
+			log(f"tidied sftp folder")
+			sftp_connection.close()
+		
+		else:
+			log(f"could not tidy sftp folder")
 
 
 def copy(config, folder, jarFolder, fileName):
@@ -286,27 +291,32 @@ def copy(config, folder, jarFolder, fileName):
 			log(error)
 	
 	else:
-		sftp_connection = sftp(config, folder, False)
+		sftp_connection = sftp(config, folder)
 
-		if config["folders"][folder]["copy"] == "false":
-			log(f"not copying to sftp folder")
-			return
+		if sftp_connection != False:
 
-		log(f"copying to sftp folder...")
+			if config["folders"][folder]["copy"] == "false":
+				log(f"not copying to sftp folder")
+				return
 
-		folderPath = config["folders"][folder]["path"]
+			log(f"copying to sftp folder...")
 
-		if not folderPath.endswith("/"):
-			folderPath = folderPath + "/"
+			folderPath = config["folders"][folder]["path"]
 
-		try:
-			sftp_connection.put(jarFolder + fileName, folderPath + fileName)
-			log(f"copied to sftp folder")
+			if not folderPath.endswith("/"):
+				folderPath = folderPath + "/"
 
-		except Exception as error:
-			log(error)
+			try:
+				sftp_connection.put(jarFolder + fileName, folderPath + fileName)
+				log(f"copied to sftp folder")
 
-		sftp_connection.close()
+			except Exception as error:
+				log(error)
+
+			sftp_connection.close()
+		
+		else:
+			log(f"could not copy to sftp folder")
 
 
 def folders(config, pluginVersion):
@@ -334,13 +344,20 @@ def folders(config, pluginVersion):
 
 
 def command(options, server):
-	log(server)
+	log(f"Server: {server}")
 
 	for command in options["command"]:
-		with MCRcon(options["ip"], options["password"], port = int(options["port"])) as mcr:
-			response = mcr.command(command)
-			log(command)
-			log(response)
+		log(f"Command: {command}")
+		
+		try:
+			with MCRcon(options["ip"], options["password"], port = int(options["port"])) as mcr:
+				response = mcr.command(command)
+				log(response)
+		except Exception as error:
+			log(f"could not send command, see error...")
+			log(error)
+
+
 
 
 def servers(config):
