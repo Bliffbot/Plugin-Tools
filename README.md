@@ -1,5 +1,5 @@
 # Plugin-Tools
-A script i wrote in Python to help me develop Minecraft plugins because i am lazy.
+A script I wrote in Python to help me develop Minecraft plugins because I am lazy.
 
 ## Dependencies
 - mcrcon from pip if you want to use RCON to send commands to server.
