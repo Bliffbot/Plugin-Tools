@@ -13,7 +13,7 @@ def log(text):
 
 def logo():
 	log(f"Plugin-Tools by Bliffbot")
-	log(f"Version 2.1.1")
+	log(f"Version 2.1.2")
 	log(f"")
 	log(f"loading config...")
 
@@ -120,9 +120,9 @@ def getConfig():
 		config = json5.load(configFile)
 
 	log(f"config loaded")
-	log(f"Plugin Name: {config["pluginName"]}")
-	log(f"Source Folder: {config["jarFolder"]}")
-	log(f"POM Location: {config["pomXML"]}")
+	log(f"Plugin Name: {config['pluginName']}")
+	log(f"Source Folder: {config['jarFolder']}")
+	log(f"POM Location: {config['pomXML']}")
 	return config
 
 
@@ -133,7 +133,7 @@ def pom(config):
 		log(f"pom.xml not found - please check your config")
 		exit()
 
-	tree = ET.parse(f"{config["pomXML"]}")
+	tree = ET.parse(f"{config['pomXML']}")
 
 	if tree is None:
 		log(f"pom.xml could not be parsed")
@@ -338,7 +338,7 @@ def folders(config, pluginVersion):
 	log(f"modifying the folders...")
 
 	for folder in config["folders"]:
-		log(f"{folder} - {config["folders"][folder]["path"]}")
+		log(f"{folder} - {config['folders'][folder]['path']}")
 		tidy(config, folder)
 		copy(config, folder, jarFolder, fileName)
 
