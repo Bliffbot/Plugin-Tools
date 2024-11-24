@@ -13,7 +13,7 @@ def log(text):
 
 def logo():
 	log(f"Plugin-Tools by Bliffbot")
-	log(f"Version 2.1.2")
+	log(f"Version 2.1.3")
 	log(f"")
 	log(f"loading config...")
 
@@ -288,19 +288,18 @@ def copy(config, folder, jarFolder, fileName):
 			log(f"copied to local folder")
 
 		except Exception as error:
+			log(f"could not copy to local folder, see error...")
 			log(error)
 	
 	else:
+		if config["folders"][folder]["copy"] == "false":
+			log(f"not copying to sftp folder")
+			return
+
+		log(f"copying to sftp folder...")
 		sftp_connection = sftp(config, folder)
 
 		if sftp_connection != False:
-
-			if config["folders"][folder]["copy"] == "false":
-				log(f"not copying to sftp folder")
-				return
-
-			log(f"copying to sftp folder...")
-
 			folderPath = config["folders"][folder]["path"]
 
 			if not folderPath.endswith("/"):
@@ -311,6 +310,7 @@ def copy(config, folder, jarFolder, fileName):
 				log(f"copied to sftp folder")
 
 			except Exception as error:
+				log(f"could not copy to sftp folder, see error...")
 				log(error)
 
 			sftp_connection.close()
@@ -335,10 +335,10 @@ def folders(config, pluginVersion):
 		return
 
 	log(f"jar found")
-	log(f"modifying the folders...")
+	log(f"modifying folders...")
 
 	for folder in config["folders"]:
-		log(f"{folder} - {config['folders'][folder]['path']}")
+		log(f"Folder: {folder} - {config['folders'][folder]['path']}")
 		tidy(config, folder)
 		copy(config, folder, jarFolder, fileName)
 
@@ -356,8 +356,6 @@ def command(options, server):
 		except Exception as error:
 			log(f"could not send command, see error...")
 			log(error)
-
-
 
 
 def servers(config):
